@@ -3,7 +3,7 @@ package com.telran.shop.utils;
 import com.telran.shop.controller.dto.*;
 import com.telran.shop.data.entity.*;
 
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toList;
 
 
 public class Mapper {
@@ -45,7 +45,7 @@ public class Mapper {
     private static ProductOrderDto map(ProductOrderEntity entity) {
         return ProductOrderDto.builder()
                 .product(ProductDto.builder()
-                        .id(entity.getId())
+                        .id(entity.getProductId())
                         .name(entity.getName())
                         .price(entity.getPrice())
                         .category(map(entity.getCategory()))

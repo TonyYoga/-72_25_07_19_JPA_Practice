@@ -124,8 +124,21 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    @Transactional
     public Optional<ShoppingCartEntity> removeProductFromCart(String userEmail, String productId, int count) {
-        return Optional.empty();
+        Optional<ShoppingCartEntity> currChoppingCart = getShoppingCart(userEmail);
+        if (currChoppingCart.isEmpty()) {
+            return Optional.empty();
+        }
+        ProductOrderEntity currProduct = currChoppingCart.get().getProducts().stream()
+                .filter(prod -> prod.getProductId().equals(productId)).findAny().orElseThrow();
+        if (currProduct.getCount() <= count) {
+            em.remove(currProduct);
+        } else {
+            currProduct.setCount(currProduct.getCount() - count);
+        }
+        em.merge(currChoppingCart.get());
+        return currChoppingCart;
     }
 
     @Override
@@ -141,18 +154,54 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    @Transactional
     public boolean clearShoppingCart(String userEmail) {
+        Optional<UserEntity> user = getUserInfo(userEmail);
+        if (user.isEmpty()) {
+            throw new RuntimeException(String.format("User %s not found", userEmail));
+        }
+        if (user.get().getShoppingCart() != null) {
+            ShoppingCartEntity sce = new ShoppingCartEntity();
+            em.persist(sce);
+            user.get().setShoppingCart(sce);
+            em.merge(user.get());
+            return true;
+        }
         return false;
     }
 
     @Override
     public List<OrderEntity> getOrders(String userEmail) {
-        return null;
+        Optional<UserEntity> user = getUserInfo(userEmail);
+        return user.get().getOrders();
     }
 
     @Override
+    @Transactional
     public Optional<OrderEntity> checkout(String userEmail) {
-        return Optional.empty();
+        Optional<UserEntity> user = getUserInfo(userEmail);
+        if (user.isEmpty()) {
+            throw new RuntimeException(String.format("User %s not found", userEmail));
+        }
+        ShoppingCartEntity currShoppingCart = user.get().getShoppingCart();
+        if (currShoppingCart.getProducts().isEmpty()) {
+            return Optional.empty();
+        }
+        //TODO check balance of the User
+        OrderEntity checkoutOrder = new OrderEntity();
+        em.persist(checkoutOrder);
+        checkoutOrder.setDate(Timestamp.valueOf(LocalDateTime.now()));
+        checkoutOrder.setOwner(currShoppingCart.getOwner());
+        List<ProductOrderEntity> poe = currShoppingCart.getProducts();
+        poe.forEach(product -> {
+            product.setOrder(checkoutOrder);
+            product.setShoppingCart(null);
+        });
+        checkoutOrder.setProducts(poe);
+        checkoutOrder.setStatus(OrderStatus.DONE);
+        user.get().getOrders().add(checkoutOrder);
+        currShoppingCart.setProducts(new ArrayList<>());
+        return Optional.of(checkoutOrder);
     }
 
 
@@ -162,7 +211,6 @@ public class UserRepositoryImpl implements UserRepository {
         if (list == null || list.isEmpty()) {
             return null;
         }
-
         return list.get(0);
     }
 }

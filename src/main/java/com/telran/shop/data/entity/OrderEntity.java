@@ -8,9 +8,7 @@ import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
-import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -32,6 +30,6 @@ public class OrderEntity {
     @ManyToOne
     @JoinColumn(name = "owner_id")
     private UserEntity owner;
-    @OneToMany(mappedBy = "shoppingCart")
+    @OneToMany(mappedBy = "orders")
     private List<ProductOrderEntity> products;
 }

@@ -2,6 +2,7 @@ package com.telran.shop.data;
 
 import com.telran.shop.data.entity.CategoryEntity;
 import com.telran.shop.data.entity.ProductEntity;
+import com.telran.shop.data.entity.UserEntity;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
@@ -37,26 +38,55 @@ public class AdminRepositoryImpl implements AdminRepository {
 
     @Override
     public boolean removeProduct(String productId) {
+        ProductEntity product = em.find(ProductEntity.class, productId);
+        if (em != null) {
+            em.remove(product);
+            return true;
+        }
         return false;
     }
 
     @Override
     public boolean removeCategory(String categoryId) {
+        CategoryEntity category = em.find(CategoryEntity.class, categoryId);
+        if (category != null) {
+            em.remove(category);
+            return true;
+        }
         return false;
     }
 
     @Override
     public boolean updateCategory(String categoryId, String categoryName) {
+        CategoryEntity category = em.find(CategoryEntity.class, categoryId);
+        if (category != null) {
+            category.setName(categoryName);
+            em.merge(category);
+            return true;
+        }
         return false;
     }
 
     @Override
     public boolean changeProductPrice(String productId, BigDecimal price) {
+        ProductEntity product = em.find(ProductEntity.class, productId);
+        if(product != null) {
+            product.setPrice(price);
+            em.merge(product);
+            return true;
+        }
         return false;
     }
 
     @Override
     public boolean addBalance(String userEmail, BigDecimal balance) {
+        UserEntity user = em.find(UserEntity.class, userEmail);
+        if (user != null) {
+            user.setBalance(balance);
+            em.merge(user);
+            return true;
+        }
         return false;
     }
+
 }
