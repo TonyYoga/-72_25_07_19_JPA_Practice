@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -173,6 +174,9 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public List<OrderEntity> getOrders(String userEmail) {
         Optional<UserEntity> user = getUserInfo(userEmail);
+        if (user.isEmpty()) {
+            return Collections.emptyList();
+        }
         return user.get().getOrders();
     }
 
@@ -187,7 +191,14 @@ public class UserRepositoryImpl implements UserRepository {
         if (currShoppingCart.getProducts().isEmpty()) {
             return Optional.empty();
         }
-        //TODO check balance of the User
+        BigDecimal totalPrice = currShoppingCart.getProducts().stream()
+                .map(ProductOrderEntity::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (user.get().getBalance().compareTo(totalPrice) < 0) {
+            throw new RuntimeException(String.format("Insufficient funds at balance of user. id: %s", user.get().getEmail()));
+        }
+        user.get().setBalance(user.get().getBalance().subtract(totalPrice));
         OrderEntity checkoutOrder = new OrderEntity();
         em.persist(checkoutOrder);
         checkoutOrder.setDate(Timestamp.valueOf(LocalDateTime.now()));
