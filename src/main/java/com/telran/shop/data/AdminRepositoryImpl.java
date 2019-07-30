@@ -37,6 +37,7 @@ public class AdminRepositoryImpl implements AdminRepository {
     }
 
     @Override
+    @Transactional
     public boolean removeProduct(String productId) {
         ProductEntity product = em.find(ProductEntity.class, productId);
         if (em != null) {
@@ -47,6 +48,7 @@ public class AdminRepositoryImpl implements AdminRepository {
     }
 
     @Override
+    @Transactional
     public boolean removeCategory(String categoryId) {
         CategoryEntity category = em.find(CategoryEntity.class, categoryId);
         if (category != null) {
@@ -57,33 +59,33 @@ public class AdminRepositoryImpl implements AdminRepository {
     }
 
     @Override
+    @Transactional
     public boolean updateCategory(String categoryId, String categoryName) {
         CategoryEntity category = em.find(CategoryEntity.class, categoryId);
         if (category != null) {
             category.setName(categoryName);
-            em.merge(category);
             return true;
         }
         return false;
     }
 
     @Override
+    @Transactional
     public boolean changeProductPrice(String productId, BigDecimal price) {
         ProductEntity product = em.find(ProductEntity.class, productId);
         if(product != null) {
             product.setPrice(price);
-            em.merge(product);
             return true;
         }
         return false;
     }
 
     @Override
+    @Transactional
     public boolean addBalance(String userEmail, BigDecimal balance) {
         UserEntity user = em.find(UserEntity.class, userEmail);
         if (user != null) {
             user.setBalance(balance);
-            em.merge(user);
             return true;
         }
         return false;
